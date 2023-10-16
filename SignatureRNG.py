@@ -52,7 +52,7 @@ def get_signature() -> list:
 
     return signature
 
-def signature_number(signature: list) -> int:
+def signature_number(signature: list):
     bitword_length = 256
     keys = []
     hash = 0
