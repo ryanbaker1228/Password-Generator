@@ -11,7 +11,8 @@ import time
 def SignatureRNG():
     wait_for_mouse_motion()
     signature = get_signature()
-    signature_number(signature)
+    passcode = signature_number(signature)
+    print(number_to_password(passcode))
 
 def wait_for_mouse_motion():
     mouse_moving = False
@@ -52,7 +53,7 @@ def get_signature() -> list:
 
     return signature
 
-def signature_number(signature: list):
+def signature_number(signature: list) -> int:
     bitword_length = 256
     keys = []
     hash = 0
@@ -60,13 +61,30 @@ def signature_number(signature: list):
     distance = sum(math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2) for (x1, y1), (x2, y2) in zip(signature, signature[1:]))
 
     for point in signature:
-        keys.append((point[0] ** point[1]) % (2 ** bitword_length))
+        x = max(point[0], 1511 - point[0])
+        y = max(point[0], 931 - point[1])
+
+        giant_number = point[0] ** point[1]
+        shift = (x + y) % (max(point[0] - point[1] % 128, 1))
+        modulus = 2 ** bitword_length
+
+        keys.append((giant_number >> abs(shift)) % modulus)
 
     for key in keys:
         hash ^= key
 
-    print(str(bin(hash))[2:])
+    return hash
 
+
+def number_to_password(passcode: int) -> str:
+    bit_mask = 0xFF
+    password = ""
+
+    for shift in range(0, 256, 8):
+        ascii_code = (passcode & bit_mask << shift) >> shift
+        password += chr(33 + ascii_code % 94)
+
+    return password
 
 
 
